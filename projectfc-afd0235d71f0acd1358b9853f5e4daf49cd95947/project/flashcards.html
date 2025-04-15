@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Flashcards</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 40px;
+      font-family: Arial, sans-serif;
+      background-color: black;
+      color: white;
+    }
+
+    h1, h2 {
+      text-align: center;
+    }
+
+    #timer {
+      text-align: center;
+      font-size: 1.2rem;
+      margin: 10px 0 20px;
+    }
+
+    #timeSelect {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+
+    #timeSelect select, #timeSelect button {
+      font-size: 1rem;
+      margin: 0 10px;
+      padding: 5px 10px;
+      border-radius: 5px;
+      border: none;
+    }
+
+    .flashcard-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 40px;
+      padding: 20px;
+      justify-content: center;
+    }
+
+    .flashcard {
+      perspective: 1000px;
+      margin-bottom: 30px;
+      border: 2px solid white;
+      border-radius: 10px;
+      padding: 10px;
+    }
+
+    .card-inner {
+      position: relative;
+      width: 100%;
+      height: 150px;
+      text-align: center;
+      transition: transform 0.6s;
+      transform-style: preserve-3d;
+      cursor: pointer;
+    }
+
+    .card-inner.flipped {
+      transform: rotateY(180deg);
+    }
+
+    .card-front,
+    .card-back {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      backface-visibility: hidden;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      font-size: 1.1rem;
+    }
+
+    .card-front {
+      background-color: white;
+      color: black;
+    }
+
+    .card-back {
+      background-color: white;
+      color: black;
+      transform: rotateY(180deg);
+    }
+
+    #quizButtonContainer {
+      text-align: center;
+      margin-top: 30px;
+    }
+
+    #quizButton {
+      padding: 10px 20px;
+      font-size: 1rem;
+      border-radius: 5px;
+      border: none;
+      background-color: white;
+      color: black;
+      cursor: pointer;
+    }
+
+    #quizButton:hover {
+      background-color: #ddd;
+    }
+  </style>
+</head>
+<body>
+  <h1 id="header">Flashcards</h1>
+
+  <div id="timeSelect">
+    <label for="minutes">Set study time:</label>
+    <select id="minutes">
+      <option value="1">1 minute</option>
+      <option value="2">2 minutes</option>
+      <option value="3">3 minutes</option>
+      <option value="5">5 minutes</option>
+      <option value="10">10 minutes</option>
+    </select>
+    <button onclick="startTimer()">Start</button>
+  </div>
+
+  <div id="timer">⏳ Timer: Not started</div>
+
+  <div class="flashcard-container" id="cardContainer"></div>
+
+  <!-- Quiz Button -->
+  <div id="quizButtonContainer">
+    <button id="quizButton" onclick="goToQuiz()">Start Quiz</button>
+  </div>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const subject = params.get("subject") || "ai";
+    const numCards = parseInt(params.get("cards")) || 0;
+
+    const container = document.getElementById("cardContainer");
+    const header = document.getElementById("header");
+    const timerDisplay = document.getElementById("timer");
+
+    header.textContent = `Flashcards for ${subject.toUpperCase()} (${numCards})`;
+
+    const flashcardsData = {
+      ai: [
+        { question: "AI full form?", answer: "Artificial Intelligence" },
+        { question: "AI type: Reactive?", answer: "Yes, reactive machines are the most basic type of AI." },
+        { question: "AI language?", answer: "Python" },
+        { question: "Famous AI test?", answer: "Turing Test" },
+        { question: "Deep learning tool?", answer: "TensorFlow" },
+        { question: "NLP stands for?", answer: "Natural Language Processing" },
+        { question: "AI field?", answer: "Computer Science" },
+        { question: "Voice assistant?", answer: "Alexa" }
+      ],
+      chatgpt: [
+        { question: "GPT full form?", answer: "Generative Pre-trained Transformer" },
+        { question: "Made by?", answer: "OpenAI" },
+        { question: "GPT type?", answer: "Language Model" },
+        { question: "GPT input?", answer: "Prompt" },
+        { question: "Model version?", answer: "4" },
+        { question: "ChatGPT output?", answer: "Text" },
+        { question: "Is it real-time?", answer: "No" },
+        { question: "Trained on?", answer: "Data" }
+      ],
+      ml: [
+        { question: "ML full form?", answer: "Machine Learning" },
+        { question: "Type of ML?", answer: "Supervised" },
+        { question: "ML uses?", answer: "Prediction" },
+        { question: "ML data?", answer: "Dataset" },
+        { question: "ML feature?", answer: "Input" },
+        { question: "Output term?", answer: "Label" },
+        { question: "Training result?", answer: "Model" },
+        { question: "Python lib?", answer: "Scikit-learn" }
+      ]
+    };
+
+    const cards = flashcardsData[subject] || [];
+
+    if (numCards < 3 || numCards > cards.length) {
+      container.innerHTML = "<p style='color:red;'>Invalid number of cards or not enough data.</p>";
+    } else {
+      for (let i = 0; i < numCards; i++) {
+        const card = document.createElement("div");
+        card.className = "flashcard";
+
+        const cardInner = document.createElement("div");
+        cardInner.className = "card-inner";
+
+        const front = document.createElement("div");
+        front.className = "card-front";
+        front.textContent = cards[i].question;
+
+        const back = document.createElement("div");
+        back.className = "card-back";
+        back.textContent = cards[i].answer;
+
+        cardInner.appendChild(front);
+        cardInner.appendChild(back);
+        card.appendChild(cardInner);
+        container.appendChild(card);
+
+        card.addEventListener("click", () => {
+          cardInner.classList.toggle("flipped");
+        });
+      }
+    }
+
+    // Timer functionality
+    let countdown;
+    function startTimer() {
+      clearInterval(countdown);
+      const minutes = parseInt(document.getElementById("minutes").value);
+      let secondsLeft = minutes * 60;
+
+      updateTimerDisplay(secondsLeft);
+
+      countdown = setInterval(() => {
+        secondsLeft--;
+        updateTimerDisplay(secondsLeft);
+
+        if (secondsLeft <= 0) {
+          clearInterval(countdown);
+          timerDisplay.textContent = "⏰ Time's up!";
+          alert("Time's up! Take a break.");
+        }
+      }, 1000);
+    }
+
+    function updateTimerDisplay(seconds) {
+      const mins = Math.floor(seconds / 60);
+      const secs = seconds % 60;
+      timerDisplay.textContent = `⏳ Timer: ${mins}:${secs < 10 ? '0' : ''}${secs}`;
+    }
+
+    // Navigate to Quiz Page
+    function goToQuiz() {
+      window.location.href = `quiz.html?subject=${subject}&cards=${numCards}`;
+    }
+  </script>
+</body>
+</html>
+
+
+

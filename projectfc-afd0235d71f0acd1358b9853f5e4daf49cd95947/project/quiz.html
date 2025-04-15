@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Quiz Spinner</title>
+  <style>
+    body {
+      background-color: black;
+      color: white;
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    h1 {
+      margin-bottom: 20px;
+    }
+
+    .wheel-container {
+      position: relative;
+      width: 500px;
+      height: 500px;
+    }
+
+    .wheel {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      border: 8px solid black;
+      background: white;
+      position: relative;
+      transition: transform 4s cubic-bezier(0.33, 1, 0.68, 1);
+    }
+
+    .segment-line {
+      position: absolute;
+      width: 50%;
+      height: 2px;
+      background: black;
+      top: 50%;
+      left: 50%;
+      transform-origin: left center;
+    }
+
+    .label {
+      position: absolute;
+      width: 140px;
+      height: 40px;
+      text-align: center;
+      font-size: 14px;
+      font-weight: bold;
+      color: black;
+      background: rgba(255, 255, 255, 0.9);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transform-origin: center center;
+    }
+
+    #spinBtn {
+      padding: 10px 20px;
+      font-size: 1rem;
+      background: white;
+      color: black;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-top: 30px;
+    }
+
+    #result {
+      margin-top: 20px;
+      font-size: 1.2rem;
+    }
+
+    .pointer {
+      position: absolute;
+      top: -20px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 0;
+      height: 0;
+      border-left: 15px solid transparent;
+      border-right: 15px solid transparent;
+      border-bottom: 20px solid red;
+    }
+  </style>
+</head>
+<body>
+  <h1>Spin the Quiz Wheel!</h1>
+  <div class="wheel-container">
+    <div class="pointer"></div>
+    <div class="wheel" id="wheel"></div>
+  </div>
+  <button id="spinBtn">Spin</button>
+  <div id="result"></div>
+
+  <script>
+    const flashcardsData = {
+      ai: [
+        "AI full form?",
+        "AI type: Reactive?",
+        "AI language?",
+        "Famous AI test?",
+        "Deep learning tool?",
+        "NLP stands for?",
+        "AI field?",
+        "Voice assistant?"
+      ],
+      chatgpt: [
+        "GPT full form?",
+        "Made by?",
+        "GPT type?",
+        "GPT input?",
+        "Model version?",
+        "ChatGPT output?",
+        "Is it real-time?",
+        "Trained on?"
+      ],
+      ml: [
+        "ML full form?",
+        "Type of ML?",
+        "ML uses?",
+        "ML data?",
+        "ML feature?",
+        "Output term?",
+        "Training result?",
+        "Python lib?"
+      ]
+    };
+
+    const questions = flashcardsData["ai"];
+    const wheel = document.getElementById("wheel");
+    const result = document.getElementById("result");
+
+    const angleStep = 360 / questions.length;
+
+    questions.forEach((question, index) => {
+      const angle = index * angleStep;
+
+      // Divider line
+      const line = document.createElement("div");
+      line.className = "segment-line";
+      line.style.transform = `rotate(${angle}deg)`;
+      wheel.appendChild(line);
+
+      // Label
+      const label = document.createElement("div");
+      label.className = "label";
+      label.innerText = question;
+
+      // Calculate position outside the wheel
+      const radius = 180; // just outside the wheel (wheel radius is ~250)
+      const midAngle = angle + angleStep / 2;
+      const rad = (midAngle * Math.PI) / 180;
+      const x = Math.cos(rad) * radius;
+      const y = Math.sin(rad) * radius;
+
+      label.style.top = `calc(50% + ${y}px - 20px)`; // center vertically
+      label.style.left = `calc(50% + ${x}px - 70px)`; // center horizontally (width/2)
+
+      wheel.appendChild(label);
+    });
+
+    let currentAngle = 0;
+
+    document.getElementById("spinBtn").addEventListener("click", () => {
+      const extra = Math.floor(Math.random() * 360);
+      const spinTo = 360 * 5 + extra;
+
+      currentAngle += spinTo;
+      wheel.style.transform = `rotate(${currentAngle}deg)`;
+
+      const normalizedAngle = (360 - (currentAngle % 360)) % 360;
+      const index = Math.floor(normalizedAngle / angleStep);
+      const selected = questions[index];
+
+      setTimeout(() => {
+        result.textContent = `🎯 Question: ${selected}`;
+      }, 4000);
+    });
+  </script>
+</body>
+</html>
+
+
+
+
+
+
+
+
